@@ -1,3 +1,5 @@
+use std::env;
+
 const FULL_BOX: [[&str; 3]; 3] = [
 	["\u{250F}", "\u{2533}", "\u{2513}"],
 	["\u{2523}", "\u{254B}", "\u{252B}"],
@@ -64,9 +66,15 @@ pub struct Variable {
 }
 
 fn main() {
+	let args: Vec<String> = env::args().collect();
 
-    println!("Enter a logic expression");
-	let mut expr = get_input();
+	let mut expr = if args.len() == 2 {
+		args[1].clone()
+	} else {
+		println!("Enter a logic expression");
+		get_input()
+	};
+
 	prepare_input(&mut expr);
 	
 

@@ -1,5 +1,9 @@
 # Truth Table Generator
 ## An easy to use logic expression parser and evaluator
+<br>
+
+---
+<br>
 
 Example input:
 ```

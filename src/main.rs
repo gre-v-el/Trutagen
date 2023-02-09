@@ -1,5 +1,3 @@
-// after input surround parentheses with spaces, so they always count as separate words
-
 const FULL_BOX: [[&str; 3]; 3] = [
 	["\u{250F}", "\u{2533}", "\u{2513}"],
 	["\u{2523}", "\u{254B}", "\u{252B}"],
@@ -27,7 +25,7 @@ There should be whitespaces between tokens (parentheses are an exception).
 ";
 
 #[derive(Debug, PartialEq, Eq)]
-enum Gate {
+pub enum Operator {
 	Or,
 	Nor,
 	Xor,
@@ -38,31 +36,31 @@ enum Gate {
 	CloseParenthesis,
 }
 
-impl Gate {
+impl Operator {
 	fn precedence(&self) -> u8{
 		match &self {
-			Gate::Or => 1,
-			Gate::Nor => 1,
-			Gate::Xor => 1,
-			Gate::And => 2,
-			Gate::Nand => 2,
-			Gate::Not => 3,
-			Gate::CloseParenthesis => 0,
-			Gate::OpenParenthesis => 0,
+			Operator::Or => 1,
+			Operator::Nor => 1,
+			Operator::Xor => 1,
+			Operator::And => 2,
+			Operator::Nand => 2,
+			Operator::Not => 3,
+			Operator::CloseParenthesis => 0,
+			Operator::OpenParenthesis => 0,
 		}
 	}
 }
 
 #[derive(Debug)]
-enum Token {
-	Var(usize), // it holds an id of a variable in /variables/ vector
-	Gate(Gate),
+pub enum Token {
+	Var(usize), // an id of a variable in /variables/ vector
+	Gate(Operator),
 }
 
 #[derive(Debug, Clone)]
-struct Variable {
-	name: String,
-	value: bool,
+pub struct Variable {
+	pub name: String,
+	pub value: bool,
 }
 
 fn main() {
@@ -188,7 +186,7 @@ fn evaluate(v: &Vec<Token>, variables: &Vec<Variable>) -> Option<bool> {
 			Token::Var(index) => stack.push(variables.get(*index).unwrap().value),
 			Token::Gate(gate) => {
 
-				if let Gate::Not = gate {
+				if let Operator::Not = gate {
 					if stack.len() < 1 { return Option::None; }
 					
 					let one = stack.pop().unwrap();
@@ -201,11 +199,11 @@ fn evaluate(v: &Vec<Token>, variables: &Vec<Variable>) -> Option<bool> {
 					let two = stack.pop().unwrap();
 
 					match gate {
-						Gate::Or => stack.push(one || two),
-						Gate::Nor => stack.push(!(one || two)),
-						Gate::Xor => stack.push(one ^ two),
-						Gate::And => stack.push(one && two),
-						Gate::Nand => stack.push(!(one && two)),
+						Operator::Or => stack.push(one || two),
+						Operator::Nor => stack.push(!(one || two)),
+						Operator::Xor => stack.push(one ^ two),
+						Operator::And => stack.push(one && two),
+						Operator::Nand => stack.push(!(one && two)),
 						_ => {},
 					}
 				}
@@ -222,7 +220,7 @@ fn evaluate(v: &Vec<Token>, variables: &Vec<Variable>) -> Option<bool> {
 fn inline_to_postline(v: &mut Vec<Token>) -> Vec<Token> { // shunting yard algorithm
 	let mut out: Vec<Token> = Vec::new();
 
-	let mut operator_stack: Vec<Gate> = Vec::new();
+	let mut operator_stack: Vec<Operator> = Vec::new();
 	
 	while v.len() > 0 {
 		match v.remove(0) {
@@ -232,9 +230,9 @@ fn inline_to_postline(v: &mut Vec<Token>) -> Vec<Token> { // shunting yard algor
 			Token::Gate(g) => {
 
 				match g {
-					Gate::OpenParenthesis => operator_stack.push(Gate::OpenParenthesis),
-					Gate::CloseParenthesis => {
-						while *operator_stack.last().unwrap() != Gate::OpenParenthesis {
+					Operator::OpenParenthesis => operator_stack.push(Operator::OpenParenthesis),
+					Operator::CloseParenthesis => {
+						while *operator_stack.last().unwrap() != Operator::OpenParenthesis {
 							out.push(Token::Gate(operator_stack.pop().unwrap()));
 						}
 						operator_stack.pop();
@@ -253,7 +251,7 @@ fn inline_to_postline(v: &mut Vec<Token>) -> Vec<Token> { // shunting yard algor
 	}
 
 	while operator_stack.len() > 0 {
-		if *operator_stack.last().unwrap() == Gate::CloseParenthesis || *operator_stack.last().unwrap() == Gate::OpenParenthesis  {panic!()}
+		if *operator_stack.last().unwrap() == Operator::CloseParenthesis || *operator_stack.last().unwrap() == Operator::OpenParenthesis  {panic!()}
 		out.push(Token::Gate(operator_stack.pop().unwrap()));
 	}
 	
@@ -273,14 +271,14 @@ fn string_to_tokens(s: &String, variables: &mut Vec<Variable>) -> Vec<Token> {
 
 fn word_to_token(w: &str, variables: & mut Vec<Variable>) -> Token {
 	match w.to_uppercase().as_str() {
-		"OR" => Token::Gate(Gate::Or),
-		"NOR" => Token::Gate(Gate::Nor),
-		"XOR" => Token::Gate(Gate::Xor),
-		"AND" => Token::Gate(Gate::And),
-		"NAND" => Token::Gate(Gate::Nand),
-		"NOT" => Token::Gate(Gate::Not),
-		"(" => Token::Gate(Gate::OpenParenthesis),
-		")" => Token::Gate(Gate::CloseParenthesis),
+		"OR" => Token::Gate(Operator::Or),
+		"NOR" => Token::Gate(Operator::Nor),
+		"XOR" => Token::Gate(Operator::Xor),
+		"AND" => Token::Gate(Operator::And),
+		"NAND" => Token::Gate(Operator::Nand),
+		"NOT" => Token::Gate(Operator::Not),
+		"(" => Token::Gate(Operator::OpenParenthesis),
+		")" => Token::Gate(Operator::CloseParenthesis),
 		b => {
 			match variables.iter().position(|e| e.name == b) {
 				Some(index) => {
@@ -302,7 +300,7 @@ fn prepare_input(s: &mut String) {
 		if s.chars().nth(i).unwrap() == '(' || s.chars().nth(i).unwrap() == ')' {
 			if i != s.len()-1 && s.chars().nth(i+1).unwrap() != ' ' { s.insert(i+1, ' '); }
 			if i != 0 && s.chars().nth(i-1).unwrap() != ' ' { 
-				s.insert(i,   ' '); 
+				s.insert(i, ' '); 
 				i+=1;
 			}
 		}

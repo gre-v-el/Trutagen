@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "truth_table_generator"
+name = "trutagen"
 version = "0.1.0"

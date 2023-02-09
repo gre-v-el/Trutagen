@@ -80,8 +80,6 @@ D:\[...]> trutagen "a or b xor c"
 ┗━━━━━┻━━━━━┻━━━━━┻━━━━━━━━━┛
         A OR B XOR C
 
-
-(base) PS D:\pliki\programowanie\rust\projs\commandline\truth_table_generator\target\release>
 ```
 
 ## The help command
